@@ -74,7 +74,7 @@ go test -v ./test/tests
 
 You'll need to set the following environment variables in order to provide the correct values to the system. Please do not hard code them in, that's bad practice. Here's a list of what needs to be provided with examples.
 
-`
+```
 // The address, inclusive of the port of your APISIX Instance
 GOSIX_APISIX_ADDRESS="https://apisix.matteobarreca.com:8080
 
@@ -92,7 +92,7 @@ GOSIX_APISIX_PLUGIN_JWT_ALGORITHM="HS256"
 
 // JWT Auth Plugin - Expiry Time in Seconds - Default 86400
 GOSIX_APISIX_PLUGIN_JWT_EXP="86400"
-`
+```
 
 ## License
 
