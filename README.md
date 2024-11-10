@@ -3,6 +3,7 @@
 <div align="center">
 
 A client library for APISIX written in Go.
+
 [![GoDoc][doc-img]][doc]
 
 <div align="left">
