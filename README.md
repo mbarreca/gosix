@@ -89,3 +89,4 @@ GOSIX_APISIX_PLUGIN_KEY_LENGTH="100"
 This is licensed under the Apache 2.0 Library to match its partner in crime, APISIX.
 
 [doc]: https://pkg.go.dev/github.com/mbarreca/gosix
+[doc-img]: https://pkg.go.dev/badge/github.com/mbarreca/gosix
