@@ -4,6 +4,7 @@ go 1.23.1
 
 require (
 	github.com/go-playground/validator/v10 v10.22.1
+	github.com/golang-jwt/jwt/v5 v5.2.1
 	golang.org/x/net v0.31.0
 )
 

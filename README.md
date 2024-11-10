@@ -45,10 +45,11 @@ go test -v ./test/tests
 
 *Consumer*
 - All Endpoint Abrstractions
-- Plugin Support for Basic, Key and JWT*
+- Plugin Support for Basic, Key and JWT
 
 ### Planned
 
+- Basic, Key and JWT Token Delete
 - Additional Auth Plugins
 - Routes
 - Service
@@ -82,8 +83,16 @@ GOSIX_APISIX_ADMIN_API_KEY="supersecretkey"
 
 // Key Auth Plugin - Key Length - Default 100
 GOSIX_APISIX_PLUGIN_KEY_LENGTH="100"
-`
 
+// REQUIRED - JWT Auth Plugin - Secret - Minimum 25 Characters
+GOSIX_APISIX_PLUGIN_JWT_SECRET="supersecret"
+
+// REQUIRED - JWT Auth Plugin - Algorithm Type - Must be HS256, HS512, RS256 or ES256
+GOSIX_APISIX_PLUGIN_JWT_ALGORITHM="HS256"
+
+// JWT Auth Plugin - Expiry Time in Seconds - Default 86400
+GOSIX_APISIX_PLUGIN_JWT_EXP="86400"
+`
 
 ## License
 

@@ -11,7 +11,8 @@ import (
 )
 
 // Add key authentication to the selected consumer, we will auto-generate a key - 100 characters long
-func KeyAuthAdd(username string, client *gosix.Client) (string, error) {
+// If Key auth exists, this will cycle the key and return it to you
+func KeyAuthGetKey(username string, client *gosix.Client) (string, error) {
 	// Get the consumer
 	origConsumer, err := GetByUsername(username, client)
 	if err != nil {
@@ -21,9 +22,9 @@ func KeyAuthAdd(username string, client *gosix.Client) (string, error) {
 	var modConsumer models.ConsumerRequest
 	// This is safe because Value needs to be included otherwise the validator will throw an error
 	plugins := origConsumer.Value.Plugins
-	if plugins != nil && plugins.KeyAuth != nil {
-		// This means Key Auth is already added, error out
-		return "", errors.New("Key Auth Already added to consumer")
+	// You can't have Key and JWT Auth in APISix, prevent this
+	if plugins != nil && plugins.JwtAuth != nil {
+		return "", errors.New("You can't have JWT and Key Auth on the same consumer")
 	}
 	// Get an new key object with a new key
 	keyAuth, err := createKeyObject()
@@ -44,67 +45,6 @@ func KeyAuthAdd(username string, client *gosix.Client) (string, error) {
 		return "", err
 	}
 	return keyAuth.Key, nil
-}
-
-// Cycle the key and return
-func KeyAuthCycle(username string, client *gosix.Client) (string, error) {
-	// Get the consumer
-	origConsumer, err := GetByUsername(username, client)
-	if err != nil {
-		return "", err
-	}
-	// Pull relevant fields
-	var modConsumer models.ConsumerRequest
-	// This is safe because Value needs to be included otherwise the validator will throw an error
-	if origConsumer.Value.Plugins == nil {
-		return "", errors.New("Plugins is nil, please add Auth to this consumer first")
-	}
-	plugins := origConsumer.Value.Plugins
-	// Get an new key object with a new key
-	keyAuth, err := createKeyObject()
-	if err != nil {
-		return "", err
-	}
-	plugins.KeyAuth = keyAuth
-	modConsumer.Username = origConsumer.Value.Username
-	modConsumer.Desc = origConsumer.Value.Desc
-	modConsumer.Plugins = plugins
-	_, err = Put(modConsumer, client)
-	if err != nil {
-		return "", err
-	}
-	return keyAuth.Key, nil
-}
-
-// Enable/Disable Key Auth for this consumer
-func KeyAuthEnabled(enabled bool, username string, client *gosix.Client) error {
-	// Get the consumer
-	origConsumer, err := GetByUsername(username, client)
-	if err != nil {
-		return err
-	}
-	// Pull relevant fields
-	var modConsumer models.ConsumerRequest
-	plugins := origConsumer.Value.Plugins
-	// This is safe because Value needs to be included otherwise the validator will throw an error
-	if plugins == nil || plugins.KeyAuth == nil {
-		// This means Key Auth is already added, error out
-		return errors.New("Key Auth not added to the consumer")
-	}
-	// Check to see if Meta Exists
-	if plugins.KeyAuth.Meta == nil {
-		plugins.KeyAuth.Meta = new(models.Meta)
-	}
-	// Disable the key
-	plugins.KeyAuth.Meta.Disable = !enabled
-	modConsumer.Username = origConsumer.Value.Username
-	modConsumer.Desc = origConsumer.Value.Desc
-	modConsumer.Plugins = plugins
-	_, err = Put(modConsumer, client)
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
 func createKeyObject() (*models.KeyAuth, error) {

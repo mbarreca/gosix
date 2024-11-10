@@ -33,7 +33,7 @@ Sub-Models
 */
 type Plugins struct {
 	BasicAuth *BasicAuth `json:"basic-auth,omitempty" validate:"omitempty"`
-	JwtAuth   *JWTAuth   `json:"jwt-auth,omitempty" validate:"omitempty"`
+	JwtAuth   *JwtAuth   `json:"jwt-auth,omitempty" validate:"omitempty"`
 	KeyAuth   *KeyAuth   `json:"key-auth,omitempty" validate:"omitempty"`
 }
 type ConsumerValue struct {

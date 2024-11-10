@@ -3,6 +3,7 @@ package tests
 import (
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/mbarreca/gosix"
 	"github.com/mbarreca/gosix/consumer"
@@ -15,11 +16,12 @@ Testing Functions
 */
 
 // TestGet tests the get method
-func TestKeyAuth(t *testing.T) {
+func TestJwtAuth(t *testing.T) {
 	// Create Consumer Request
 	var c models.ConsumerRequest
 	c.Username = "GosixTestUsername"
 	c.Desc = "GosixTestDescription"
+	key := "GosixTestKeyMinLength"
 	// Create Client
 	client, err := gosix.New()
 	if err != nil {
@@ -29,31 +31,31 @@ func TestKeyAuth(t *testing.T) {
 	if err := lib.AddConsumer(c, client); err != nil {
 		t.Fatalf("Error in Add Consumer: %v", err)
 	}
-	// Add the Key to the User
-	key, err := consumer.KeyAuthGetKey(c.Username, client)
+	// Add the JWT Parameters to the User
+	token, err := consumer.JWTAuthGetKey(c.Username, key, client)
 	if err != nil {
-		t.Fatalf("Error in Key Auth add: %v", err)
+		t.Fatalf("Error in Jwt Auth add: %v", err)
 	}
 	// Check to see if the Key is present
-	if err := checkKey(c.Username, key, client); err != nil {
-		t.Fatalf("Error in Key Check: %v", err)
+	if err := checkJwtKey(c.Username, key, client); err != nil {
+		t.Fatalf("Error in Jwt Token Check: %v", err)
 	}
+	time.Sleep(time.Second * 2)
 	// Cycle the Key
-	key, err = consumer.KeyAuthGetKey(c.Username, client)
+	newToken, err := consumer.JWTAuthGetKey(c.Username, key, client)
 	if err != nil {
-		t.Fatalf("Error in Key Cycle: %v", err)
+		t.Fatalf("Error in Jwt Token Cycle: %v", err)
 	}
-	// Check to see if the Key is present and matches
-	if err := checkKey(c.Username, key, client); err != nil {
-		t.Fatalf("Error in Key Check: %v", err)
+	if token == newToken {
+		t.Fatalf("Error cycling Jwt Token")
 	}
-	// Disable the Key
-	if err := changeKeyStatus(false, c.Username, client); err != nil {
-		t.Fatalf("Error in Key Disable: %v", err)
+	// Disable the JwtToken
+	if err := changeJwtStatus(false, c.Username, client); err != nil {
+		t.Fatalf("Error in Jwt Token Disable: %v", err)
 	}
-	// Enable the Key
-	if err := changeKeyStatus(true, c.Username, client); err != nil {
-		t.Fatalf("Error in Key Enable: %v", err)
+	// Enable the JwtToken
+	if err := changeJwtStatus(true, c.Username, client); err != nil {
+		t.Fatalf("Error in Jwt Token Enable: %v", err)
 	}
 	// Delete the User
 	if err := lib.DeleteConsumer(c.Username, client); err != nil {
@@ -61,7 +63,7 @@ func TestKeyAuth(t *testing.T) {
 	}
 }
 
-func checkKey(username, key string, client *gosix.Client) error {
+func checkJwtKey(username, key string, client *gosix.Client) error {
 	// Check to see if the Key is present
 	getUser, err := consumer.GetByUsername(username, client)
 	if err != nil {
@@ -73,14 +75,14 @@ func checkKey(username, key string, client *gosix.Client) error {
 	if getUser.Value.Username != username {
 		return err
 	}
-	if getUser.Value.Plugins.KeyAuth.Key != key {
+	if getUser.Value.Plugins.JwtAuth.Key != key {
 		return err
 	}
 	return nil
 }
-func changeKeyStatus(status bool, username string, client *gosix.Client) error {
+func changeJwtStatus(status bool, username string, client *gosix.Client) error {
 	// Change status
-	if err := consumer.AuthEnabled(models.KeyAuth{}, status, username, client); err != nil {
+	if err := consumer.AuthEnabled(models.JwtAuth{}, status, username, client); err != nil {
 		return err
 	}
 	// Get User
@@ -89,7 +91,7 @@ func changeKeyStatus(status bool, username string, client *gosix.Client) error {
 		return err
 	}
 	// See if the status matches it
-	if status != !getUser.Value.Plugins.KeyAuth.Meta.Disable {
+	if status != !getUser.Value.Plugins.JwtAuth.Meta.Disable {
 		return errors.New("Key Status Mismatch")
 	}
 	return nil

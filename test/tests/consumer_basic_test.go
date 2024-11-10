@@ -58,7 +58,7 @@ func TestBasicAuth(t *testing.T) {
 	if err := changeBasicStatus(true, c.Username, client); err != nil {
 		t.Fatalf("Error in Basic Enable: %v", err)
 	}
-	// Delete the Username
+	// Delete the User
 	if err := lib.DeleteConsumer(c.Username, client); err != nil {
 		t.Fatalf("Error in Delete Consumer: %v", err)
 	}
@@ -86,7 +86,7 @@ func checkBasic(username string, basicAuth *models.BasicAuth, client *gosix.Clie
 // Disables/Enables the plugin and checks APISix
 func changeBasicStatus(status bool, username string, client *gosix.Client) error {
 	// Change status
-	if err := consumer.BasicAuthEnabled(status, username, client); err != nil {
+	if err := consumer.AuthEnabled(models.BasicAuth{}, status, username, client); err != nil {
 		return err
 	}
 	// Get User
