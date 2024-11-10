@@ -1,11 +1,13 @@
 package tests
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/mbarreca/gosix"
 	"github.com/mbarreca/gosix/consumer"
 	"github.com/mbarreca/gosix/consumer/models"
+	"github.com/mbarreca/gosix/consumer/tests/lib"
 )
 
 /*
@@ -14,26 +16,18 @@ Testing Functions
 
 // TestGet tests the get method
 func TestKeyAuth(t *testing.T) {
-	// Define the request object
+	// Create Consumer Request
 	var c models.ConsumerRequest
-	c.Username = "DELETETHISISATESTUSER"
-	c.Desc = "DELETETHISISATESTUSERDESCRIPTION"
-
+	c.Username = "GosixTestUsername"
+	c.Desc = "GosixTestDescription"
+	// Create Client
 	client, err := gosix.New()
 	if err != nil {
 		t.Fatalf("Error in Client Creation: %v", err)
 	}
-	// Create a Consumer
-	put, err := consumer.Put(c, client)
-	if err != nil {
-		t.Fatalf("Error in PUT Request: %v", err)
-	}
-	// Check the key and the username
-	if put.Key != ("/apisix/consumers/" + c.Username) {
-		t.Fatalf("Failed PUT Request Assertion: Key Field: %v", err)
-	}
-	if put.Value.Username != c.Username {
-		t.Fatalf("Failed PUT Request Assertion: Username Field: %v", err)
+	// Add Consumer
+	if err := lib.AddConsumer(c, client); err != nil {
+		t.Fatalf("Error in Add Consumer: %v", err)
 	}
 	// Add the Key to the User
 	key, err := consumer.KeyAuthAdd(c.Username, client)
@@ -41,8 +35,7 @@ func TestKeyAuth(t *testing.T) {
 		t.Fatalf("Error in Key Auth add: %v", err)
 	}
 	// Check to see if the Key is present
-	err = checkKey(c.Username, key, client)
-	if err != nil {
+	if err := checkKey(c.Username, key, client); err != nil {
 		t.Fatalf("Error in Key Check: %v", err)
 	}
 	// Cycle the Key
@@ -50,48 +43,22 @@ func TestKeyAuth(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Error in Key Cycle: %v", err)
 	}
-	// Check to see if the Key is present
+	// Check to see if the Key is present and matches
 	err = checkKey(c.Username, key, client)
 	if err != nil {
 		t.Fatalf("Error in Key Check: %v", err)
 	}
 	// Disable the Key
-	err = consumer.KeyAuthEnabled(false, c.Username, client)
-	if err != nil {
-		t.Fatalf("Error in Key Cycle: %v", err)
-	}
-	status, err := getKeyStatus(c.Username, client)
-	if err != nil {
-		t.Fatalf("Error in Key Status Get Request: %v", err)
-	}
-	if status {
-		t.Fatalf("Key Disable Failed")
+	if err := changeKeyStatus(false, c.Username, client); err != nil {
+		t.Fatalf("Error in Key Disable: %v", err)
 	}
 	// Enable the Key
-	err = consumer.KeyAuthEnabled(true, c.Username, client)
-	if err != nil {
-		t.Fatalf("Error in Key Cycle: %v", err)
-	}
-	status, err = getKeyStatus(c.Username, client)
-	if err != nil {
-		t.Fatalf("Error in Key Status Get Request: %v", err)
-	}
-	if !status {
-		t.Fatalf("Key Disable Failed")
+	if err := changeKeyStatus(true, c.Username, client); err != nil {
+		t.Fatalf("Error in Key Enable: %v", err)
 	}
 	// Delete the Username
-	delete, err := consumer.Delete(c.Username, client)
-	if err != nil {
-		t.Fatalf("Error in DELETE By Username Request: %v", err)
-	}
-	// Check the key and the username
-	if delete.Key != ("/apisix/consumers/" + c.Username) {
-		t.Fatalf("Failed DELETE By Username Request Assertion: Key Field: %v", err)
-	}
-	// Check to see if the key is still there
-	_, err = consumer.GetByUsername(c.Username, client)
-	if err == nil {
-		t.Fatalf("Error in DELETE By Username Request, Found After Request: %v", err)
+	if err := lib.DeleteConsumer(c.Username, client); err != nil {
+		t.Fatalf("Error in Delete Consumer: %v", err)
 	}
 }
 
@@ -112,11 +79,19 @@ func checkKey(username, key string, client *gosix.Client) error {
 	}
 	return nil
 }
-func getKeyStatus(username string, client *gosix.Client) (bool, error) {
-	// Check to see if the Key is present
+func changeKeyStatus(status bool, username string, client *gosix.Client) error {
+	// Change status
+	if err := consumer.KeyAuthEnabled(status, username, client); err != nil {
+		return err
+	}
+	// Get User
 	getUser, err := consumer.GetByUsername(username, client)
 	if err != nil {
-		return false, err
+		return err
 	}
-	return !getUser.Value.Plugins.KeyAuth.Meta.Disable, nil
+	// See if the status matches it
+	if status != !getUser.Value.Plugins.KeyAuth.Meta.Disable {
+		return errors.New("Key Status Mismatch")
+	}
+	return nil
 }

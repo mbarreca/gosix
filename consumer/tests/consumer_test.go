@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	"github.com/mbarreca/gosix"
-	"github.com/mbarreca/gosix/consumer"
 	"github.com/mbarreca/gosix/consumer/models"
+	"github.com/mbarreca/gosix/consumer/tests/lib"
 )
 
 /*
@@ -14,67 +14,29 @@ Testing Functions
 
 // TestGet tests the get method
 func TestConsumer(t *testing.T) {
-	// Define the request object
+	// Create Consumer Request
 	var c models.ConsumerRequest
-	c.Username = "DELETETHISISATESTUSER"
-	c.Desc = "DELETETHISISATESTUSERDESCRIPTION"
-
+	c.Username = "GosixTestUsername"
+	c.Desc = "GosixTestDescription"
+	// Create Client
 	client, err := gosix.New()
 	if err != nil {
 		t.Fatalf("Error in Client Creation: %v", err)
 	}
-	// Make Create Request (PUT)
-	put, err := consumer.Put(c, client)
-	if err != nil {
-		t.Fatalf("Error in PUT Request: %v", err)
+	// Add Consumer
+	if err := lib.AddConsumer(c, client); err != nil {
+		t.Fatalf("Error in Add Consumer: %v", err)
 	}
-	// Check the key and the username
-	if put.Key != ("/apisix/consumers/" + c.Username) {
-		t.Fatalf("Failed PUT Request Assertion: Key Field: %v", err)
+	// Get Consumer
+	if err := lib.GetConsumer(c.Username, client); err != nil {
+		t.Fatalf("Error in Get Consumer: %v", err)
 	}
-	if put.Value.Username != c.Username {
-		t.Fatalf("Failed PUT Request Assertion: Username Field: %v", err)
-	}
-	// Check Get By Username (GET by Username)
-	getUser, err := consumer.GetByUsername(c.Username, client)
-	if err != nil {
-		t.Fatalf("Error in GET By Username Request: %v", err)
-	}
-	// Check the key and the username
-	if getUser.Key != ("/apisix/consumers/" + c.Username) {
-		t.Fatalf("Failed GET By Username Request Assertion: Key Field: %v", err)
-	}
-	if getUser.Value.Username != c.Username {
-		t.Fatalf("Failed GET By Username Request Assertion: Username Field: %v", err)
-	}
-	// Check Get Request
-	getUsers, err := consumer.Get(client)
-	if err != nil {
-		t.Fatalf("Error in GET: %v", err)
-	}
-	// Find the Key
-	found := false
-	for _, user := range *getUsers.List {
-		if (user.Key == ("/apisix/consumers/" + c.Username)) && (user.Value.Username == c.Username) {
-			found = true
-			break
-		}
-	}
-	if !found {
-		t.Fatalf("Failed GET Request Assertion: Username or Key Field: %v", err)
+	// Get Consumer from All
+	if err := lib.GetConsumerFromAll(c.Username, client); err != nil {
+		t.Fatalf("Error in Get Consumer From All: %v", err)
 	}
 	// Delete the Username
-	delete, err := consumer.Delete(c.Username, client)
-	if err != nil {
-		t.Fatalf("Error in DELETE By Username Request: %v", err)
-	}
-	// Check the key and the username
-	if delete.Key != ("/apisix/consumers/" + c.Username) {
-		t.Fatalf("Failed DELETE By Username Request Assertion: Key Field: %v", err)
-	}
-	// Check to see if the key is still there
-	_, err = consumer.GetByUsername(c.Username, client)
-	if err == nil {
-		t.Fatalf("Error in DELETE By Username Request, Found After Request: %v", err)
+	if err := lib.DeleteConsumer(c.Username, client); err != nil {
+		t.Fatalf("Error in Delete Consumer: %v", err)
 	}
 }
