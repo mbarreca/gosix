@@ -2,10 +2,7 @@ package consumer
 
 type ConsumerRequest struct {
 	Username string `json:"username" validate:"required,alphanum,min=1,max=100"` // Name of the Consumer.
-	GroupID  string `json:"group_id" validate:"required,alphanum,min=1,max=100"` // Group of the Consumer.
-	Plugins  string `json:"plugins" validate:"required,alphanum,min=1,max=100"`  // Plugins that are executed during the request/response cycle.
 	Desc     string `json:"desc" validate:"required,alphanum,min=1,max=100"`     // Description of usage scenarios.
-	Labels   string `json:"labels" validate:"required,alphanum,min=1,max=100"`   // Attributes of the Consumer specified as key-value pairs.
 }
 
 type GetResponse struct {
