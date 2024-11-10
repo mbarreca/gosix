@@ -35,5 +35,5 @@ func New() (*Client, error) {
 		Timeout: time.Second * 5,
 	}
 	ctx := context.Background()
-	return &Client{client: client, ctx: ctx}, nil
+	return &Client{Client: client, Ctx: ctx}, nil
 }

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -13,7 +14,8 @@ import (
 
 // APISix Error Object
 type APISixError struct {
-	ErrorMsg string `json:"error_msg"`
+	ErrorMsg    string `json:"error_msg"`
+	Description string `json:"description"`
 }
 
 // REQUEST
@@ -35,6 +37,7 @@ func DoRequest(body any, headers []Header, endpoint, requestType string, client 
 		if err != nil {
 			return nil, err
 		}
+		fmt.Println(string(bodyJSON))
 		// Form the request
 		req, err = http.NewRequest(requestType, os.Getenv("GOSIX_APISIX_ADDRESS")+endpoint, bytes.NewBuffer(bodyJSON))
 		if err != nil {
@@ -69,7 +72,7 @@ func DoRequest(body any, headers []Header, endpoint, requestType string, client 
 
 	// Read the body, check for errors
 	responseBody, err := io.ReadAll(resp.Body)
-	if resp.StatusCode != http.StatusOK {
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
 		// This means there's been an error, marshal in the typical APISix format
 		var r APISixError
 		err = json.Unmarshal([]byte(responseBody), &r)

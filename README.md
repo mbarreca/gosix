@@ -4,9 +4,15 @@
 
 A client library for APISIX written in Go.
 
+<div align="left">
+
 ## Installation
 
+<div align="center">
+
 `go get github.com/mbarreca/gosix`
+
+<div align="left">
 
 Gosix was built and tested with Go 1.23, it may still work with prior versions however it has not been tested so use at your own risk.
 
@@ -26,14 +32,23 @@ This library was built to be as extensible, performant and practical as possible
 
 Opentelemetry is supported in this library via *context*. We use embedded structs to keep the same HTTPClient so that context can be passed throughout the process (i.e - Consumer created, added to whitelist, added to blacklist) to allow for rich tracing and performance monitoring.
 
+## Testing
+`
+go test ./consumer/tests/*
+`
+
 ## Roadmap
 
-Implemented
-*Admin API*
+### Implemented
+
+*Consumer*
+- All Endpoint Abrstractions
+- Plugin Support for Basic*, Key and JWT*
+
+### Planned
+
+- Additional Auth Plugins
 - Routes
-- Consumer
-Planned
-*Admin API*
 - Service
 - Credential
 - Upstream
@@ -47,18 +62,22 @@ Planned
 - Proto
 - Schema Validation
 
+### Out of Scope
+
 *Control API*
-- Nothing planned
 
 
 ## How to use this library
 
 You'll need to set the following environment variables in order to provide the correct values to the system. Please do not hard code them in, that's bad practice. Here's a list of what needs to be provided with examples.
+
 `
 // The address, inclusive of the port of your APISIX Instance
 GOSIX_APISIX_ADDRESS="https://apisix.matteobarreca.com:8080
 // Your Admin API KEY
 GOSIX_APISIX_ADMIN_API_KEY="supersecretkey"
+// Key Auth Plugin - Key Length - Default 100
+GOSIX_APISIX_PLUGIN_KEY_LENGTH="100"
 `
 
 
