@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -37,7 +36,6 @@ func DoRequest(body any, headers []Header, endpoint, requestType string, client 
 		if err != nil {
 			return nil, err
 		}
-		fmt.Println(string(bodyJSON))
 		// Form the request
 		req, err = http.NewRequest(requestType, os.Getenv("GOSIX_APISIX_ADDRESS")+endpoint, bytes.NewBuffer(bodyJSON))
 		if err != nil {

@@ -34,6 +34,7 @@ func KeyAuthAdd(username string, client *gosix.Client) (string, error) {
 	if plugins == nil {
 		plugins = new(models.Plugins)
 	}
+	// Re-create the modified consumer
 	plugins.KeyAuth = keyAuth
 	modConsumer.Username = origConsumer.Value.Username
 	modConsumer.Desc = origConsumer.Value.Desc

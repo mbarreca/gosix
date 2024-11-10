@@ -3,6 +3,7 @@
 <div align="center">
 
 A client library for APISIX written in Go.
+[![GoDoc][doc-img]][doc]
 
 <div align="left">
 
@@ -34,7 +35,7 @@ Opentelemetry is supported in this library via *context*. We use embedded struct
 
 ## Testing
 `
-go test ./consumer/tests/*
+go test -v ./test/tests
 `
 
 ## Roadmap
@@ -43,7 +44,7 @@ go test ./consumer/tests/*
 
 *Consumer*
 - All Endpoint Abrstractions
-- Plugin Support for Basic*, Key and JWT*
+- Plugin Support for Basic, Key and JWT*
 
 ### Planned
 
@@ -74,8 +75,10 @@ You'll need to set the following environment variables in order to provide the c
 `
 // The address, inclusive of the port of your APISIX Instance
 GOSIX_APISIX_ADDRESS="https://apisix.matteobarreca.com:8080
+
 // Your Admin API KEY
 GOSIX_APISIX_ADMIN_API_KEY="supersecretkey"
+
 // Key Auth Plugin - Key Length - Default 100
 GOSIX_APISIX_PLUGIN_KEY_LENGTH="100"
 `
@@ -84,3 +87,5 @@ GOSIX_APISIX_PLUGIN_KEY_LENGTH="100"
 ## License
 
 This is licensed under the Apache 2.0 Library to match its partner in crime, APISIX.
+
+[doc]: https://pkg.go.dev/github.com/mbarreca/gosix

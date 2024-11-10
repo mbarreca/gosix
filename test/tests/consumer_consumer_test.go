@@ -5,7 +5,7 @@ import (
 
 	"github.com/mbarreca/gosix"
 	"github.com/mbarreca/gosix/consumer/models"
-	"github.com/mbarreca/gosix/consumer/tests/lib"
+	"github.com/mbarreca/gosix/test/lib"
 )
 
 /*
