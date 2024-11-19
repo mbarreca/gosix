@@ -1,5 +1,11 @@
 package models
 
+type BasicAuth struct {
+	Username string `json:"username,omitempty" validate:"required,ascii,min=1,max=200"` // This library uses emails as usernames - Must be Unique
+	Password string `json:"password,omitempty" validate:"required,ascii,min=1,max=200"` // Password of the user. This field supports saving the value in Secret Manager using the APISIX Secret resource.
+	Meta     *Meta  `json:"_meta,omitempty" validate:"omitempty"`
+}
+
 type JwtAuth struct {
 	Key                 string                 `json:"key,omitempty" validate:"required,ascii,min=20,max=200"`         // Unique Key for the Consumer
 	Secret              string                 `json:"secret,omitempty" validate:"omitempty,ascii,min=10,max=200"`     // HIGHLY Recommended to use a secret in this instance - The encryption key. If unspecified, auto generated in the background. This field supports saving the value in Secret Manager using the APISIX Secret resource.
@@ -19,3 +25,12 @@ const (
 	RS256 JwtEncryptionAlgorithm = "RS256"
 	ES256 JwtEncryptionAlgorithm = "ES256"
 )
+
+type KeyAuth struct {
+	Key  string `json:"key,omitempty" validate:"required,ascii,min=20,max=200"` // Unique key for a Consumer. This field supports saving the value in Secret Manager using the APISIX Secret resource.
+	Meta *Meta  `json:"_meta,omitempty" validate:"omitempty"`
+}
+
+type Meta struct {
+	Disable bool `json:"disable,omitempty" validate:"omitempty,boolean"`
+}

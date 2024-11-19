@@ -1,4 +1,4 @@
-package consumer
+package authentication
 
 import (
 	"errors"
@@ -7,21 +7,31 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5" // MIT
-	"github.com/mbarreca/gosix"
-	"github.com/mbarreca/gosix/consumer/models"
+	"github.com/mbarreca/gosix/client"
+	"github.com/mbarreca/gosix/consumer"
+	"github.com/mbarreca/gosix/models"
 )
+
+type JWT struct {
+	client *client.Client
+	c      *consumer.Consumer
+}
+
+// Constructor - You *shouldn't* be using this
+func NewJWT(c *client.Client, consumer *consumer.Consumer) *JWT {
+	return &JWT{client: c, c: consumer}
+}
 
 // This method will add JWT if it doesn't exist or if it does, generate a new key
 // It is highly recommended you store the secret-key using APISix's Secret Methods
 // Which is Environment Variables, GCP, AWS or Hashicorps Vault
-func JWTAuthGetKey(username string, key string, client *gosix.Client) (string, error) {
-	// Get the consumer
-	origConsumer, err := GetByUsername(username, client)
+// username -> Consumers username
+// key -> The JWT key to generate the token with
+func (j *JWT) Get(username string, key string) (string, error) {
+	user, err := j.c.Get(username)
 	if err != nil {
 		return "", err
 	}
-	// Pull relevant fields
-	var modConsumer models.ConsumerRequest
 	// Create EXP Time
 	exp := 86400
 	if os.Getenv("GOSIX_APISIX_PLUGIN_JWT_EXP") != "" {
@@ -32,9 +42,7 @@ func JWTAuthGetKey(username string, key string, client *gosix.Client) (string, e
 	}
 	expTime := time.Now().UTC().Add(time.Second * time.Duration(exp))
 	var jwtAuth *models.JwtAuth
-	// This is safe because Value needs to be included otherwise the validator will throw an error
-	plugins := origConsumer.Value.Plugins
-	if plugins != nil && plugins.JwtAuth != nil {
+	if user.Plugins != nil && user.Plugins.JwtAuth != nil {
 		// This means JWT Auth is already added, generate a new key and return
 		token, err := generateJwt(key, expTime)
 		if err != nil {
@@ -44,7 +52,7 @@ func JWTAuthGetKey(username string, key string, client *gosix.Client) (string, e
 	} else {
 		// This means we haven't added JWT yet, let's add it
 		// You can't have Key and JWT Auth in APISix, prevent this
-		if plugins != nil && plugins.KeyAuth != nil {
+		if user.Plugins != nil && user.Plugins.KeyAuth != nil {
 			return "", errors.New("You can't have JWT and Key Auth on the same consumer")
 		}
 		// Get an new key object with a new key
@@ -54,17 +62,13 @@ func JWTAuthGetKey(username string, key string, client *gosix.Client) (string, e
 		}
 	}
 	// If there are no plugins, add them
-	if plugins == nil {
-		plugins = new(models.Plugins)
+	if user.Plugins == nil {
+		user.Plugins = new(models.Plugins)
 	}
 	// Re-create the modified consumer
 	jwtAuth.Exp = expTime.Unix()
-	plugins.JwtAuth = jwtAuth
-	modConsumer.Username = origConsumer.Value.Username
-	modConsumer.Desc = origConsumer.Value.Desc
-	modConsumer.Plugins = plugins
-	_, err = Put(modConsumer, client)
-	if err != nil {
+	user.Plugins.JwtAuth = jwtAuth
+	if err := j.c.Update(user); err != nil {
 		return "", err
 	}
 	// Generate JWT and return
@@ -73,6 +77,50 @@ func JWTAuthGetKey(username string, key string, client *gosix.Client) (string, e
 		return "", err
 	}
 	return token, nil
+}
+
+// Delete the JWT Plugin from the Consumer
+// username -> Consumers username
+func (j *JWT) Delete(username string) error {
+	user, err := j.c.Get(username)
+	if err != nil {
+		return err
+	}
+	if user.Plugins == nil || user.Plugins.JwtAuth == nil {
+		return errors.New("No Key Auth on this consumer")
+	}
+	user.Plugins.JwtAuth = nil
+	if err := j.c.Update(user); err != nil {
+		return err
+	}
+	return nil
+}
+
+// Set the enabled/disabled sate of Basic Auth for this consumer
+// enabled - True if enabled, false if disabled - default state is Enabled
+// username -> Consumers username
+func (j *JWT) Enabled(enabled bool, username string) error {
+	// Get the consumer
+	user, err := j.c.Get(username)
+	if err != nil {
+		return err
+	}
+	if user.Plugins != nil && user.Plugins.JwtAuth != nil {
+		// Check to see if Meta Exists
+		if user.Plugins.JwtAuth.Meta == nil {
+			user.Plugins.JwtAuth.Meta = new(models.Meta)
+		}
+		// Disable the key
+		user.Plugins.JwtAuth.Meta.Disable = !enabled
+	} else {
+		return errors.New("User doesn't have a Basic Auth plugin")
+	}
+	// Update the consumer
+	if err := j.c.Update(user); err != nil {
+		return err
+	}
+	return nil
+
 }
 
 func createJwtObject(key string) (*models.JwtAuth, error) {

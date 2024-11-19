@@ -4,11 +4,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"os"
+	"reflect"
 
-	"github.com/mbarreca/gosix"
+	"github.com/go-playground/validator/v10"
+	"github.com/mbarreca/gosix/client"
 )
 
 // APISix Error Object
@@ -26,18 +29,24 @@ type APISixError struct {
 // RETURN
 // []byte - A byte array with the response
 // error - An error if one has occured
-func DoRequest(body any, headers []Header, endpoint, requestType string, client *gosix.Client) ([]byte, error) {
+func DoRequest(body any, headers []Header, endpoint, requestType string, client *client.Client) ([]byte, error) {
 	// Create the request object
 	var req *http.Request
 	var err error
 	if body != nil {
-		// If we have a request body, then marshal it
+		// Check to see if this is an SSL request, if so then we need to remove the escape new lines
+		buf := new(bytes.Buffer)
 		bodyJSON, err := json.Marshal(body)
 		if err != nil {
 			return nil, err
 		}
+		// This will prevent JSON marhsalling from breaking the SSL certificate and key
+		if reflect.TypeOf(body).String() == "models.SSL" {
+			bodyJSON = bytes.Replace(bodyJSON, []byte(`\\n`), []byte(`\n`), -1)
+		}
+		buf = bytes.NewBuffer(bodyJSON)
 		// Form the request
-		req, err = http.NewRequest(requestType, os.Getenv("GOSIX_APISIX_ADDRESS")+endpoint, bytes.NewBuffer(bodyJSON))
+		req, err = http.NewRequest(requestType, os.Getenv("GOSIX_APISIX_ADDRESS")+endpoint, buf)
 		if err != nil {
 			return nil, err
 		}
@@ -48,7 +57,6 @@ func DoRequest(body any, headers []Header, endpoint, requestType string, client 
 			return nil, err
 		}
 	}
-
 	// Loop through and apply headers to the request
 	for _, header := range headers {
 		req.Header.Set(header.Key, header.Value)
@@ -61,7 +69,6 @@ func DoRequest(body any, headers []Header, endpoint, requestType string, client 
 
 	// Add Context
 	req.WithContext(client.Ctx)
-
 	// Form and make the request
 	resp, err := client.Client.Do(req)
 	if err != nil {
@@ -85,4 +92,26 @@ func DoRequest(body any, headers []Header, endpoint, requestType string, client 
 		return nil, errors.New(r.ErrorMsg)
 	}
 	return responseBody, nil
+}
+
+func RESTCall[T any, V any](url, method string, obj T, client *client.Client) (V, error) {
+	var empty V
+	response, err := DoRequest(obj, nil, url, method, client)
+	if err != nil {
+		return empty, err
+	}
+	// Unmarshal
+	var r V
+	err = json.Unmarshal([]byte(response), &r)
+	if err != nil {
+		return empty, err
+	}
+	// Validate Response
+	validate := validator.New(validator.WithRequiredStructEnabled())
+	err = validate.Struct(r)
+	if err != nil {
+		fmt.Println("R: ", r)
+		return empty, err
+	}
+	return r, nil
 }
