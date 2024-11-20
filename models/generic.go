@@ -1,7 +1,7 @@
 package models
 
 type All[V Value] struct {
-	Total   int          `json:"total" validate:"required,number"`
+	Total   int          `json:"total" validate:"omitempty,number"`
 	Objects *[]Object[V] `json:"list"`
 }
 
