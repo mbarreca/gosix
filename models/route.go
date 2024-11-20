@@ -14,7 +14,7 @@ type Route struct {
 	Plugins         *Plugins   `json:"plugins,omitempty" validate:"omitempty"`
 	Priority        int        `json:"priority,omitempty" validate:"omitempty,number"`
 	Script          string     `json:"script,omitempty" validate:"omitempty,ascii,min=1,max=1000"`
-	Upstream        *Upstream  `json:"upstream,required" validate:"omitempty"`
+	Upstream        *Upstream  `json:"upstream,omitempty" validate:"omitempty"`
 	UpstreamID      string     `json:"upstream_id,omitempty" validate:"omitempty,ascii,min=1,max=200"`
 	ServiceID       string     `json:"service_id,omitempty" validate:"omitempty,ascii,min=1,max=1000"`
 	Timestamp       *Timeout   `json:"timestamp,omitempty" validate:"omitempty"`
