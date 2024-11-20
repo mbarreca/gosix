@@ -1,7 +1,7 @@
 package models
 
 type ConsumerRestriction struct {
-	Type           string                       `json:"type,omitempty" validate:"omitempty,alphanum,min=1,max=100"`         // Default - consumer_name - Valid Values - consumer_name, consumer_group_id, service_id, route_id - Type of object to base the restriction on.
+	Type           string                       `json:"type,omitempty" validate:"omitempty,ascii,min=1,max=100"`            // Default - consumer_name - Valid Values - consumer_name, consumer_group_id, service_id, route_id - Type of object to base the restriction on.
 	Whitelist      []string                     `json:"whitelist,omitempty" validate:"omitempty,dive"`                      // List of objects to whitelist. Has a higher priority than allowed_by_methods.
 	Blacklist      []string                     `json:"blacklist,omitempty" validate:"omitempty,dive"`                      // List of objects to blacklist. Has a higher priority than whitelist.
 	RejectedCode   int                          `json:"rejected_code,omitempty" validate:"omitempty,number"`                // Default - 403 - Valid Values - HTTP status code returned when the request is rejected.
