@@ -78,10 +78,9 @@ func (k *Key) GetWithExp(username string, exp int) (string, error) {
 	return keyAuth.Key, nil
 }
 
-// Add key authentication to the selected consumer, we will auto-generate a key - 100 characters long
-// If Key auth exists, this will cycle the key and return it to you
+// Validate will compare the key provided plus the expiry time and validate it
 // username -> Consumers username
-// exp -> The key's expiration time -> Note that this is not a field built into APISIX so you will need to verify it yourself
+// key -> The key provided to validate
 func (k *Key) Validate(username, key string) (bool, error) {
 	user, err := k.c.Get(username)
 	if err != nil {
@@ -103,6 +102,30 @@ func (k *Key) Validate(username, key string) (bool, error) {
 	}
 	if keyAuth.Key != key {
 		return false, nil
+	}
+	return true, nil
+}
+
+// Validate will only validate if a key is expired
+// username -> Consumers username
+func (k *Key) ValidateExp(username string) (bool, error) {
+	user, err := k.c.Get(username)
+	if err != nil {
+		return false, err
+	}
+	if user.Plugins == nil || user.Plugins.KeyAuth == nil {
+		return false, errors.New("Key Auth doesn't exist")
+	}
+	keyAuth := user.Plugins.KeyAuth
+	if keyAuth.Exp != "" {
+		t, err := time.Parse("01-02-2006 15:04:05.000000", keyAuth.Exp)
+		if err != nil {
+			return false, errors.New("Issue with parsing Expiry")
+		}
+		if time.Now().UTC().Unix() > t.Unix() {
+			// Key is expired
+			return false, nil
+		}
 	}
 	return true, nil
 }
