@@ -4,6 +4,7 @@ import (
 	"errors"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/mbarreca/gosix/client"
 	"github.com/mbarreca/gosix/consumer"
@@ -46,6 +47,64 @@ func (k *Key) Get(username string) (string, error) {
 		return "", err
 	}
 	return keyAuth.Key, nil
+}
+
+// Add key authentication to the selected consumer, we will auto-generate a key - 100 characters long
+// If Key auth exists, this will cycle the key and return it to you
+// username -> Consumers username
+// exp -> The key's expiration offset in seconds -> Note that this is not a field built into APISIX so you will need to verify it yourself
+func (k *Key) GetWithExp(username string, exp int) (string, error) {
+	user, err := k.c.Get(username)
+	if err != nil {
+		return "", err
+	}
+	if user.Plugins != nil && user.Plugins.JwtAuth != nil {
+		return "", errors.New("You can't have JWT and Key Auth on the same consumer")
+	}
+	// Get an new key object with a new key
+	keyAuth, err := createKeyObject()
+	if err != nil {
+		return "", err
+	}
+	if user.Plugins == nil {
+		user.Plugins = new(models.Plugins)
+	}
+	keyAuth.Exp = time.Now().Add(time.Second * time.Duration(exp)).UTC().Format("01-02-2006 15:04:05.000000")
+	// Modify the consumer
+	user.Plugins.KeyAuth = keyAuth
+	if err := k.c.Update(user); err != nil {
+		return "", err
+	}
+	return keyAuth.Key, nil
+}
+
+// Add key authentication to the selected consumer, we will auto-generate a key - 100 characters long
+// If Key auth exists, this will cycle the key and return it to you
+// username -> Consumers username
+// exp -> The key's expiration time -> Note that this is not a field built into APISIX so you will need to verify it yourself
+func (k *Key) Validate(username, key string) (bool, error) {
+	user, err := k.c.Get(username)
+	if err != nil {
+		return false, err
+	}
+	if user.Plugins == nil || user.Plugins.KeyAuth == nil {
+		return false, errors.New("Key Auth doesn't exist")
+	}
+	keyAuth := user.Plugins.KeyAuth
+	if keyAuth.Exp != "" {
+		t, err := time.Parse("01-02-2006 15:04:05.000000", keyAuth.Exp)
+		if err != nil {
+			return false, errors.New("Issue with parsing Expiry")
+		}
+		if time.Now().UTC().Unix() > t.Unix() {
+			// Key is expired
+			return false, nil
+		}
+	}
+	if keyAuth.Key != key {
+		return false, nil
+	}
+	return true, nil
 }
 
 // Delete the Key Plugin from the Consumer

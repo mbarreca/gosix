@@ -3,6 +3,7 @@ package tests
 import (
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/mbarreca/gosix"
 	"github.com/mbarreca/gosix/test/lib"
@@ -44,6 +45,26 @@ func TestKeyAuth(t *testing.T) {
 	if err := changeKeyStatus(true, consumer.Username, a); err != nil {
 		t.Fatalf("Error in Key Token Enable: %v", err)
 	}
+	// Add key with expiration
+	tokenExp, err := a.Key.GetWithExp(consumer.Username, 5)
+	if err != nil {
+		t.Fatal(err)
+	}
+	success, err := a.Key.Validate(consumer.Username, tokenExp)
+	if err != nil {
+		t.Fatal(err)
+	} else if !success {
+		t.Fatal("Validation Failed")
+	}
+	// Wait until it expires
+	time.Sleep(time.Second * 6)
+	success, err = a.Key.Validate(consumer.Username, tokenExp)
+	if err != nil {
+		t.Fatal(err)
+	} else if success {
+		t.Fatal("Expiration Failed")
+	}
+
 	// Delete the Key Token
 	if err := a.Key.Delete(consumer.Username); err != nil {
 		t.Fatal(err)
