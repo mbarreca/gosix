@@ -58,9 +58,6 @@ func (k *Key) GetWithExp(username string, exp int) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	if user.Plugins != nil && user.Plugins.JwtAuth != nil {
-		return "", errors.New("You can't have JWT and Key Auth on the same consumer")
-	}
 	// Get an new key object with a new key
 	keyAuth, err := createKeyObject()
 	if err != nil {
