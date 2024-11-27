@@ -183,6 +183,6 @@ func createKeyObject() (*models.KeyAuth, error) {
 	}
 	// Build the Key Auth Object, make a new key and update
 	var keyAuth models.KeyAuth
-	keyAuth.Key = library.RandomString(length)
+	keyAuth.Key = library.RandomStringAlphaNum(length)
 	return &keyAuth, nil
 }
