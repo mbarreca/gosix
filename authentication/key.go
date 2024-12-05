@@ -34,7 +34,7 @@ func (k *Key) Get(username string) (string, error) {
 		return "", errors.New("You can't have JWT and Key Auth on the same consumer")
 	}
 	// Get an new key object with a new key
-	keyAuth, err := createKeyObject()
+	keyAuth, err := createKeyObject(100)
 	if err != nil {
 		return "", err
 	}
@@ -59,7 +59,34 @@ func (k *Key) GetWithExp(username string, exp int) (string, error) {
 		return "", err
 	}
 	// Get an new key object with a new key
-	keyAuth, err := createKeyObject()
+	keyAuth, err := createKeyObject(100)
+	if err != nil {
+		return "", err
+	}
+	if user.Plugins == nil {
+		user.Plugins = new(models.Plugins)
+	}
+	keyAuth.Exp = time.Now().Add(time.Second * time.Duration(exp)).UTC().Format("01-02-2006 15:04:05.000000")
+	// Modify the consumer
+	user.Plugins.KeyAuth = keyAuth
+	if err := k.c.Update(user); err != nil {
+		return "", err
+	}
+	return keyAuth.Key, nil
+}
+
+// Add key authentication to the selected consumer, we will auto-generate a key - 100 characters long
+// If Key auth exists, this will cycle the key and return it to you
+// username -> Consumers username
+// exp -> The key's expiration offset in seconds -> Note that this is not a field built into APISIX so you will need to verify it yourself
+// length -> A custom length for the key
+func (k *Key) GetWithExpLength(username string, exp, length int) (string, error) {
+	user, err := k.c.Get(username)
+	if err != nil {
+		return "", err
+	}
+	// Get an new key object with a new key
+	keyAuth, err := createKeyObject(length)
 	if err != nil {
 		return "", err
 	}
@@ -171,8 +198,7 @@ func (k *Key) Enabled(enabled bool, username string) error {
 	return nil
 }
 
-func createKeyObject() (*models.KeyAuth, error) {
-	length := 100
+func createKeyObject(length int) (*models.KeyAuth, error) {
 	var err error
 	// Check if we've overriden the default key length
 	if os.Getenv("GOSIX_APISIX_PLUGIN_KEY_LENGTH") != "" {

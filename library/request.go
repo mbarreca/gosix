@@ -91,6 +91,9 @@ func DoRequest(body any, headers []Header, endpoint, requestType string, client 
 		}
 		return nil, errors.New(r.ErrorMsg)
 	}
+	// Close the body
+	resp.Body.Close()
+	// Return
 	return responseBody, nil
 }
 
