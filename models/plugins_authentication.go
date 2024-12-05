@@ -27,7 +27,7 @@ const (
 )
 
 type KeyAuth struct {
-	Key  string `json:"key,omitempty" validate:"required,ascii,min=20,max=200"` // Unique key for a Consumer. This field supports saving the value in Secret Manager using the APISIX Secret resource.
+	Key  string `json:"key,omitempty" validate:"required,ascii,min=8,max=200"` // Unique key for a Consumer. This field supports saving the value in Secret Manager using the APISIX Secret resource.
 	Exp  string `json:"exp,omitempty" validate:"omitempty,ascii,min=15,max=40"`
 	Meta *Meta  `json:"_meta,omitempty" validate:"omitempty"`
 }

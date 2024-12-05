@@ -79,7 +79,7 @@ func (k *Key) GetWithExp(username string, exp int) (string, error) {
 // If Key auth exists, this will cycle the key and return it to you
 // username -> Consumers username
 // exp -> The key's expiration offset in seconds -> Note that this is not a field built into APISIX so you will need to verify it yourself
-// length -> A custom length for the key
+// length -> A custom length for the key - MINIMUM 8 Characters
 func (k *Key) GetWithExpLength(username string, exp, length int) (string, error) {
 	user, err := k.c.Get(username)
 	if err != nil {
