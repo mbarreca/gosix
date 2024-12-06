@@ -7,6 +7,7 @@ type Plugins struct {
 	KeyAuth   *KeyAuth   `json:"key-auth,omitempty" validate:"omitempty"`
 	// Security Plugins
 	ConsumerRestriction *ConsumerRestriction `json:"consumer-restriction,omitempty" validate:"omitempty"`
+	CORS                *CORS                `json:"cors,omitempty" validate:"omitempty"`
 }
 
 type PluginConfig struct {
