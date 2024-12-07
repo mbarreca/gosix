@@ -30,6 +30,10 @@ type KeyAuth struct {
 	Key  string `json:"key,omitempty" validate:"omitempty,ascii,min=8,max=200"` // Unique key for a Consumer. This field supports saving the value in Secret Manager using the APISIX Secret resource.
 	Exp  string `json:"exp,omitempty" validate:"omitempty,ascii,min=15,max=40"`
 	Meta *Meta  `json:"_meta,omitempty" validate:"omitempty"`
+	// These are meant for routes only
+	Header        string `json:"header,omitempty" validate:"omitempty,ascii"`             // The header to get the key from.
+	Query         string `json:"query,omitempty" validate:"omitempty,ascii"`              // The query string to get the key from. Lower priority than header.
+	HideCrentials bool   `json:"hide_credentials,omitempty" validate:"omitempty,boolean"` //	Apache APISIX will pass the request header or query string that contains the authentication information to the Upstream if hide_credentials is false. Otherwise the authentication information will be removed before proxying.
 }
 
 type Meta struct {
