@@ -76,6 +76,7 @@ func (c *Consumer) Update(consumer models.Consumer) error {
 	var user models.Consumer
 	user.Username = consumer.Username
 	user.Desc = consumer.Desc
+	user.GroupID = consumer.GroupID
 	user.Plugins = consumer.Plugins
 	if _, err := api.API[models.Consumer, models.Create]("", "", user, c.client); err != nil {
 		return err
