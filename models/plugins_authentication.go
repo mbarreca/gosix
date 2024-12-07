@@ -15,6 +15,11 @@ type JwtAuth struct {
 	Base64Secret        bool                   `json:"base64_secret,omitempty" validate:"omitempty,boolean"`           // Default - False - Set to true if the secret is base64 encoded.
 	LifetimeGracePeriod int                    `json:"lifetime_grace_period,omitempty" validate:"omitempty,number"`    // Default - Don't touch unless you know what you're doing - 0 - Define the leeway in seconds to account for clock skew between the server that generated the jwt and the server validating it. Value should be zero (0) or a positive integer.
 	Meta                *Meta                  `json:"_meta,omitempty" validate:"omitempty"`
+	// These are meant for routes only
+	Header        string `json:"header,omitempty" validate:"omitempty,ascii"`             // The header to get the key from.
+	Query         string `json:"query,omitempty" validate:"omitempty,ascii"`              // The query string to get the key from. Lower priority than header.
+	Cookie        string `json:"cookie,omitempty" validate:"omitempty,ascii"`             // The cookie to get the token from. Lower priority than query.
+	HideCrentials bool   `json:"hide_credentials,omitempty" validate:"omitempty,boolean"` // Apache APISIX will pass the request header or query string that contains the authentication information to the Upstream if hide_credentials is false. Otherwise the authentication information will be removed before proxying.
 }
 
 type JwtEncryptionAlgorithm string
@@ -33,7 +38,7 @@ type KeyAuth struct {
 	// These are meant for routes only
 	Header        string `json:"header,omitempty" validate:"omitempty,ascii"`             // The header to get the key from.
 	Query         string `json:"query,omitempty" validate:"omitempty,ascii"`              // The query string to get the key from. Lower priority than header.
-	HideCrentials bool   `json:"hide_credentials,omitempty" validate:"omitempty,boolean"` //	Apache APISIX will pass the request header or query string that contains the authentication information to the Upstream if hide_credentials is false. Otherwise the authentication information will be removed before proxying.
+	HideCrentials bool   `json:"hide_credentials,omitempty" validate:"omitempty,boolean"` // Apache APISIX will pass the request header or query string that contains the authentication information to the Upstream if hide_credentials is false. Otherwise the authentication information will be removed before proxying.
 }
 
 type Meta struct {
