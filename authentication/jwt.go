@@ -50,11 +50,6 @@ func (j *JWT) Get(username string, key string) (string, error) {
 		}
 		return token, nil
 	} else {
-		// This means we haven't added JWT yet, let's add it
-		// You can't have Key and JWT Auth in APISix, prevent this
-		if user.Plugins != nil && user.Plugins.KeyAuth != nil {
-			return "", errors.New("You can't have JWT and Key Auth on the same consumer")
-		}
 		// Get an new key object with a new key
 		jwtAuth, err = createJwtObject(key)
 		if err != nil {

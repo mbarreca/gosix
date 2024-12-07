@@ -30,9 +30,6 @@ func (k *Key) Get(username string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	if user.Plugins != nil && user.Plugins.JwtAuth != nil {
-		return "", errors.New("You can't have JWT and Key Auth on the same consumer")
-	}
 	// Get an new key object with a new key
 	keyAuth, err := createKeyObject(100)
 	if err != nil {
