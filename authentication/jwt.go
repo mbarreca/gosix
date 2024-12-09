@@ -42,20 +42,13 @@ func (j *JWT) Get(username string, key string) (string, error) {
 	}
 	expTime := time.Now().UTC().Add(time.Second * time.Duration(exp))
 	var jwtAuth *models.JwtAuth
-	if user.Plugins != nil && user.Plugins.JwtAuth != nil {
-		// This means JWT Auth is already added, generate a new key and return
-		token, err := generateJwt(key, expTime)
-		if err != nil {
-			return "", err
-		}
-		return token, nil
-	} else {
-		// Get an new key object with a new key
-		jwtAuth, err = createJwtObject(key)
-		if err != nil {
-			return "", err
-		}
+
+	// Get an new key object with a new key
+	jwtAuth, err = createJwtObject(key)
+	if err != nil {
+		return "", err
 	}
+
 	// If there are no plugins, add them
 	if user.Plugins == nil {
 		user.Plugins = new(models.Plugins)
